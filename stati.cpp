@@ -33,9 +33,9 @@ float averageVoltage = 0, tdsValue = 0;
 
 
 
-#define tankH 30   //tank height in cm
-#define tankL1 30    //l1 in cm
-#define tankL2 30   //l2 in cm
+#define tankH 17   //tank height in cm
+#define tankL1 42    //l1 in cm
+#define tankL2 35   //l2 in cm
 #define totVol ((tankH-5)*tankL1*tankL2)/1000 //tank volume in L
 #define concentration 100  //nutrient SOL A and B  concentration
 #define correctionSpeed 70   //correction speed (%)
