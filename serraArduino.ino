@@ -11,8 +11,6 @@ app_state stato; //struct defined in stati.h
 
 void setup() {
   Serial.begin(115200);            //inizializzazione della porta seriale principale
-  // mySerial.begin(57600);      // Rimosso
-  // myTransfer.begin(mySerial); // Rimosso
 
   pinMode(perpumpA, OUTPUT);        
   pinMode(perpumpB, OUTPUT);
