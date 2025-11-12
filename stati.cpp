@@ -3,17 +3,11 @@
 
 #define valve 5      //electrovalve pin
 
-// #include <NewPing.h>   //sonar library
-// #define pin_trig 9            //sonar pins
-// #define pin_echo 6
-// #define massimo 1000        //max distance
-// NewPing sonar(pin_trig, pin_echo,  massimo);   //initialize sonar
-
-// Water level sensor
-#define PIN_SIGNAL_WL A5
-#define POWER_PIN 6
-#define massimo 1000
-
+#include <NewPing.h>   //sonar library
+#define pin_trig 9            //sonar pins
+#define pin_echo 6
+#define massimo 1000        //max distance
+NewPing sonar(pin_trig, pin_echo,  massimo);   //initialize sonar
 
 #include <OneWire.h>                //libraries for DS18B20 temperature probe
 #include <DallasTemperature.h>
@@ -50,8 +44,6 @@ float averageVoltage = 0, tdsValue = 0;
 int solAvol = (totVol*1000) / concentration;    //mL     for solution adjustment
 int solBvol = (totVol*1000) / concentration;    //mL
 int h2oVol = (totVol*1000) - (solAvol + solBvol);   //mL
-
-
 
 void go(struct app_state *st, enum stati dest){    //function to change state, defined in stati.h
   st->current = dest;
