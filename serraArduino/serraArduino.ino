@@ -68,12 +68,5 @@ void sendToRaspberry() {
     Serial.print(";EC:");
     Serial.print(stato.ecValue, 2);
     Serial.println(";");
-    
-    // setpoint al Raspberry Pi:
-    // Serial.print("PH_SET:");
-    // Serial.print(stato.pHsetpoint, 2);
-    // Serial.print(";EC_SET:");
-    // Serial.print(stato.ECsetpoint, 2);
-    // Serial.println(";");
   }
 }

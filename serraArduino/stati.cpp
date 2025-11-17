@@ -16,7 +16,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);     //initialize T probe
 
 // PH sensor
-#define PH_PIN = A1    //pH pin
+#define PH_PIN A1    //pH pin
 
 
 #define EC_PIN A2      // ec pin
@@ -52,18 +52,14 @@ void go(struct app_state *st, enum stati dest){    //function to change state, d
 
 void app_level(struct app_state *st){   //function to get tank level
   if (st->first) {
-    Serial.println("get level");          //in every state write once the state function's name, controlled by bool first defined in struct in stati.h
     st->first = false;
   }
 
   digitalWrite(valve, st->valveclosed);    //make sure valve is closed
 
-  int  lettura = analogRead(PIN_SIGNAL_WL);
+  int  lettura = sonar.ping_cm();
   st->level = ((tankH - lettura) * tankL1 * tankL2) / 1000;   //read distance between surface and sonar and convert to L
-  //Serial.print(lettura);
-  //Serial.println(" cm");
   Serial.print(st->level);
-  Serial.println(" L");
 
  if(st->level < totVol ){   //check if level must be restored
   go(st, st_fill);         //if yes go to fill state
@@ -75,13 +71,12 @@ void app_level(struct app_state *st){   //function to get tank level
 
 void app_fill(struct app_state *st){
   if (st->first) {
-    Serial.println("fill the tank");
     st->first = false;
   }
 
   while (st->level < totVol) {                        //open valve until level is restored
     digitalWrite(valve, !st->valveclosed);
-    int lettura = analogRead(PIN_SIGNAL_WL);
+    int lettura = sonar.ping_cm();
     st->level = ((tankH - lettura) * tankL1 * tankL2) / 1000;
    }
     go(st, st_level);
@@ -92,34 +87,32 @@ void app_fill(struct app_state *st){
 
 void app_temp(struct app_state *st){          //get temperature function
   if (st->first) {
-    Serial.println("get temperature");
     st->first = false;
   }
   sensors.requestTemperatures();
   st->  T = sensors.getTempCByIndex(0);
 
-  Serial.print("temperature: ");
   Serial.println(st->T);
   go(st, st_ph);
 }
 
 
 
-
-void app_ph(struct app_state *st){          //get ph function
+void app_ph(struct app_state *st) {          
   if (st->first) {
-    Serial.println("get pH");
     st->first = false;
   }
-   st->ph=pH.read_ph();
-  Serial.print("pH: ");
-  Serial.println(pH.read_ph());
+
+  int raw = analogRead(PH_PIN);
+  float voltage = raw * 5.0 / 1024.0;  
+  st->ph = 3.5 * voltage;   // or your own formula
+  Serial.println(st->ph);
+
   go(st, st_ec);
 }
 
 void app_ec(struct app_state *st){        //get EC function
   if (st->first) {
-    Serial.println("get  ec");
     st->first = false;
   }
 
@@ -128,14 +121,7 @@ void app_ec(struct app_state *st){        //get EC function
   float compensationCoefficient = 1.0 + 0.02 * (st->T - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
   float compensationVolatge = averageVoltage / compensationCoefficient; //temperature compensation
   tdsValue = (133.42 * compensationVolatge * compensationVolatge * compensationVolatge - 255.86 * compensationVolatge * compensationVolatge + 857.39 * compensationVolatge) * 0.5; //convert voltage value to tds value
-  //Serial.print("voltage:");
-  //Serial.print(averageVoltage,2);
-  //Serial.print("V   ");
-  //Serial.print("TDS Value:");
-  //Serial.print(tdsValue,0);
-  //Serial.println("ppm");
   st->ecValue = tdsValue / 640;    //convert tds to ec
-  Serial.print("EC: ");
   Serial.println(st->ecValue);
   go(st, st_adj);
 }
