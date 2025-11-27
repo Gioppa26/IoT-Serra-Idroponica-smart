@@ -111,6 +111,14 @@ void app_ph(struct app_state *st) {
   go(st, st_ec);
 }
 
+float misura=0;
+  misura = analogRead(PH_PIN);
+  misura = misura / 10.0;
+  float ph = (float)misura * (13.9/1024);
+  ph = 1.7 * ph;
+  st->ph = ph;
+  //Serial.println(st->ph);
+
 void app_ec(struct app_state *st){        //get EC function
   if (st->first) {
     st->first = false;
