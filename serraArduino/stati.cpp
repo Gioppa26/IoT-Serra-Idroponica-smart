@@ -3,11 +3,14 @@
 
 #define valve 5      //electrovalve pin
 
-#include <NewPing.h>   //sonar library
-#define pin_trig 9            //sonar pins
-#define pin_echo 6
-#define massimo 1000        //max distance
-NewPing sonar(pin_trig, pin_echo,  massimo);   //initialize sonar
+#include <NewPing.h>
+     
+#define TRIGGER_PIN  9
+#define ECHO_PIN     6
+#define MAX_DISTANCE 1000
+unsigned int distance;
+    
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 #include <OneWire.h>                //libraries for DS18B20 temperature probe
 #include <DallasTemperature.h>
@@ -18,14 +21,11 @@ DallasTemperature sensors(&oneWire);     //initialize T probe
 // PH sensor
 #define PH_PIN A1    //pH pin
 
-
 #define EC_PIN A2      // ec pin
 #define VREF 5.0      //EC analog reference voltage(Volt) of the ADC
-#define SCOUNT  30           //EC sum of sample point
-int analogBuffer;    // store the EC analog value in the array, read from ADC
-float averageVoltage = 0, tdsValue = 0;
-
-
+int rawValue = 0;
+float voltage = 0.0;
+float ecValue = 0.0;
 
 #define tankH 17   //tank height in cm
 #define tankL1 42    //l1 in cm
@@ -54,19 +54,15 @@ void app_level(struct app_state *st){   //function to get tank level
   if (st->first) {
     st->first = false;
   }
-
   digitalWrite(valve, st->valveclosed);    //make sure valve is closed
-
-  int  lettura = sonar.ping_cm();
-  st->level = ((tankH - lettura) * tankL1 * tankL2) / 1000;   //read distance between surface and sonar and convert to L
-  Serial.print(st->level);
-
- if(st->level < totVol ){   //check if level must be restored
-  go(st, st_fill);         //if yes go to fill state
-  } else
-  go(st, st_temp);
+  distance = (sonar.ping_cm());
+  st->level = ((tankH - distance) * tankL1 * tankL2) / 1000;
+  if(st->level < totVol ){   //check if level must be restored
+    go(st, st_fill);         //if yes go to fill state
+  } else {
+    go(st, st_temp);
+  }
 }
-
 
 
 void app_fill(struct app_state *st){
@@ -80,7 +76,6 @@ void app_fill(struct app_state *st){
     st->level = ((tankH - lettura) * tankL1 * tankL2) / 1000;
    }
     go(st, st_level);
-
 }
 
 
@@ -89,64 +84,46 @@ void app_temp(struct app_state *st){          //get temperature function
   if (st->first) {
     st->first = false;
   }
+  sensors.begin();
   sensors.requestTemperatures();
-  st->  T = sensors.getTempCByIndex(0);
-
-  Serial.println(st->T);
+  st->T = sensors.getTempCByIndex(0);
   go(st, st_ph);
 }
-
-
 
 void app_ph(struct app_state *st) {          
   if (st->first) {
     st->first = false;
   }
-
-  int raw = analogRead(PH_PIN);
-  float voltage = raw * 5.0 / 1024.0;  
-  st->ph = 3.5 * voltage;   // or your own formula
-  Serial.println(st->ph);
-
-  go(st, st_ec);
-}
-
-float misura=0;
+  float misura=0;
   misura = analogRead(PH_PIN);
   misura = misura / 10.0;
   float ph = (float)misura * (13.9/1024);
   ph = 1.7 * ph;
   st->ph = ph;
   //Serial.println(st->ph);
+  go(st, st_ec);
+}
 
 void app_ec(struct app_state *st){        //get EC function
   if (st->first) {
     st->first = false;
   }
-
-  analogBuffer = analogRead(EC_PIN);    //read the analog value and store into the buffer
-  averageVoltage = analogBuffer * (float)VREF / 1024.0; // read the analog value more stable by the median filtering algorithm, and convert to voltage value
-  float compensationCoefficient = 1.0 + 0.02 * (st->T - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
-  float compensationVolatge = averageVoltage / compensationCoefficient; //temperature compensation
-  tdsValue = (133.42 * compensationVolatge * compensationVolatge * compensationVolatge - 255.86 * compensationVolatge * compensationVolatge + 857.39 * compensationVolatge) * 0.5; //convert voltage value to tds value
-  st->ecValue = tdsValue / 640;    //convert tds to ec
-  Serial.println(st->ecValue);
+  rawValue = analogRead(EC_PIN);
+  voltage = rawValue * ((float)VREF / 1023.0);   //read the analog value and store into the buffer
+  (st->ecValue) = voltage * 1.33;
   go(st, st_adj);
 }
 
-
-
 void app_adj(struct app_state *st){              //adjust solution
   if (st->first) {
-    Serial.println("adjust nutrient solution");
     st->first = false;
   }
   float deltaPH = st->ph - (st->pHsetpoint - pHoffset);           //calculate pH delta
   float deltaEC = (st->ECsetpoint - ECoffset) - st->ecValue;          //calculate EC delta
-  Serial.print("delta EC: ");
-  Serial.println(deltaEC, 2);
-  Serial.print("delta pH: ");
-  Serial.println(deltaPH);
+  //Serial.print("delta EC: ");
+  //Serial.println(deltaEC, 2);
+  //Serial.print("delta pH: ");
+  //Serial.println(deltaPH);
   //   PROPORTION:  VTot=10L ; concentration 50:1   --->   solAvol / ECsetpoint = x / deltaEC;
 if (deltaEC > ECoffset || deltaPH > pHoffset ) {                  //check if any correction is needed
     if (deltaEC > ECoffset){
@@ -169,26 +146,26 @@ if (deltaEC > ECoffset || deltaPH > pHoffset ) {                  //check if any
     Serial.println(dosingB, 0);
     */
     digitalWrite(perpumpA, HIGH);               //activate pumps for the time needed
-    Serial.println("SolA dosing");
+    //Serial.println("SolA dosing");
     delay(dosingA * 1000);
     delay(1000);
     digitalWrite(perpumpA, LOW);
-    Serial.println("SolA stop");
+    //Serial.println("SolA stop");
     delay(300);
     digitalWrite(perpumpB, HIGH);
-    Serial.println("SolB dosing");
+    //Serial.println("SolB dosing");
     delay(dosingB * 1000);
     delay(1000);
     digitalWrite(perpumpB, LOW);
-    Serial.println("SolB stop");
+    //Serial.println("SolB stop");
     delay(300);
   }  if ( deltaPH > pHoffset ) {
     digitalWrite(pHpumpC, HIGH);
-    Serial.println("Acid dosing");          //activate acid pump for 1 sec
+    //Serial.println("Acid dosing");          //activate acid pump for 1 sec
     delay(1000);                        //change this value empirically based on type of acid, total volume, correction time
     digitalWrite(pHpumpC, LOW);
-    Serial.println("Acid stop");
+    //Serial.println("Acid stop");
   }
   go(st, st_ph);
- } else go(st, st_level);
+}
 }
