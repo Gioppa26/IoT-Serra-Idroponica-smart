@@ -7,7 +7,7 @@
      
 #define TRIGGER_PIN  9
 #define ECHO_PIN     6
-#define MAX_DISTANCE 1000
+#define MAX_DISTANCE 200
 unsigned int distance;
     
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
@@ -30,7 +30,7 @@ float ecValue = 0.0;
 #define tankH 17   //tank height in cm
 #define tankL1 42    //l1 in cm
 #define tankL2 35   //l2 in cm
-#define totVol ((tankH-5)*tankL1*tankL2)/1000 //tank volume in L
+#define totVol ((tankH-10)*tankL1*tankL2)/1000 //tank volume in L
 #define concentration 100  //nutrient SOL A and B  concentration
 #define correctionSpeed 70   //correction speed (%)
 #define perpumpA 10  //peristaltic pump pins
