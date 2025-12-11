@@ -1,14 +1,14 @@
 import signal
-from datetime import datetime, time as dt_time # Importa per la gestione dell'ora
+from datetime import datetime, time as dt_time # Librerie per la gestione dell'ora
 import time
 
 from influxdb_client import InfluxDBClient, Point, WriteOptions
 from influxdb_client.client.write_api import SYNCHRONOUS
-from serial_port_reader import serial_port_reader						# classe personalizzata
+from serial_port_reader import serial_port_reader
 
 DEVICE_NAME = "Arduino"
-BAUDRATE = 115200 # velocita' di comunicazione
-shutdown = False						# flag per capire quando fermare il ciclo iniziale
+BAUDRATE = 115200           # velocita' di comunicazione
+shutdown = False			# flag per capire quando fermare il ciclo iniziale
 LED_STATE = False
 
 ### CONFIGURAZIONE ORARI LED ###

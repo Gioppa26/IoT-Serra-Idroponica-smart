@@ -34,7 +34,10 @@ class serial_port_reader:
 			line=''
 		return line
 	
-	def write_command(self, command): # <-- NUOVO METODO AGGIUNTO
+	### FUNZIONE PER LA SCRITTURA DEI COMANDI ###
+	# Viene utilizzata per inviare il comando di accendere e spegnere il led
+
+	def write_command(self, command):
 		"""Invia un comando (stringa) al dispositivo seriale."""
 		if self.open:
 			try:

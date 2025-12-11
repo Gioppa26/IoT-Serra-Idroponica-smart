@@ -1,12 +1,17 @@
 #include "stati.h"
 
-#define perpumpA 10  //peristaltic pump pins 
+//// PIN POMPE PERISTALTICHE ////
+#define perpumpA 10
 #define perpumpB 12
 #define pHpumpC 11
-#define valve 5      //electrovalve
+
+//// PIN VALVOLA SOLENOIDE ////
+#define valve 5
+
+//// PIN LED ////
 #define LED_PIN 8
 
-app_state stato; //struct defined in stati.h
+app_state stato; //struct definita in stati.h
 
 void setup() {
   Serial.begin(115200);            //inizializzazione della porta seriale principale
@@ -47,7 +52,7 @@ void loop() {
    sendToRaspberry();
 }
 
-//// NUOVE FUNZIONI PER LA COMUNICAZIONE SERIALE CON RASPBERRY PI //////////
+//// FUNZIONE PER LA RICEZIONE COMANDI DEL RASPBERRY PI ////
 
 void handlePiCommands() {
   // Controlla se ci sono dati in arrivo sulla seriale dal Raspberry Pi
@@ -57,24 +62,19 @@ void handlePiCommands() {
 
     if (command == "LED_ON") {
       digitalWrite(LED_PIN, HIGH);
-      //Serial.println("ACK: LED_ON"); // Feedback per il Pi
     } else if (command == "LED_OFF") {
       digitalWrite(LED_PIN, LOW);
-      //Serial.println("ACK: LED_OFF"); // Feedback per il Pi
     }
   }
 }
 
-//// FUNZIONI PER LA COMUNICAZIONE SERIALE CON RASPBERRY PI //////////
+//// FUNZIONI PER LA COMUNICAZIONE SERIALE CON RASPBERRY PI ////
 
 void sendToRaspberry() {
   static unsigned long lastSendTime = 0;
   // Invia i dati ogni 5 secondi (o altro intervallo desiderato)
   if (millis() - lastSendTime >= 5000) { 
     lastSendTime = millis();
-    //Serial.println("Livello:");
-    //Serial.println(stato.level,2);
-    //Serial.print("Temperatura:");
     Serial.print(stato.T, 1); //Valore temperatura
     Serial.print(";");
     //Serial.print("PH:");
@@ -83,6 +83,6 @@ void sendToRaspberry() {
     //Serial.print("EC:");
     Serial.print(stato.ecValue, 2); //Valore EC
     Serial.print(";");
-    Serial.print(stato.level,2);
+    Serial.print(stato.level,2); //Valore Livello acquas
   }
 }
